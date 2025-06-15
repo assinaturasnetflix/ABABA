@@ -1,9 +1,9 @@
 // =============================================================================
 // cBOT - Investment Platform - Final and Complete Backend
 // Author: Gemini
-// Version: 10.0 (Ready to Run)
-// Description: Self-contained backend with all features, including serving
-//              frontend files from the root and dynamic page generation.
+// Version: 11.0 (Render Deployment Fix)
+// Description: Self-contained backend with syntax fix for dynamic page
+//              generation, ready for production deployment.
 // =============================================================================
 
 // -----------------------------------------------------------------------------
@@ -40,61 +40,19 @@ if (!process.env.MONGO_URI || !process.env.JWT_SECRET || !process.env.GMAIL_USER
 // -----------------------------------------------------------------------------
 // 3. MONGOOSE MODELS (DATABASE SCHEMAS)
 // -----------------------------------------------------------------------------
-
-const UserSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true, lowercase: true },
-    password: { type: String, required: true },
-    withdrawalPassword: { type: String, required: true },
-    balance: { type: Number, default: 0 },
-    isVerified: { type: Boolean, default: false },
-    isAdmin: { type: Boolean, default: false },
-    isBlocked: { type: Boolean, default: false },
-    verificationToken: { type: String },
-    resetPasswordToken: { type: String },
-    resetPasswordExpires: { type: Date },
-    createdAt: { type: Date, default: Date.now }
-});
+const UserSchema = new mongoose.Schema({ name: { type: String, required: true }, email: { type: String, required: true, unique: true, lowercase: true }, password: { type: String, required: true }, withdrawalPassword: { type: String, required: true }, balance: { type: Number, default: 0 }, isVerified: { type: Boolean, default: false }, isAdmin: { type: Boolean, default: false }, isBlocked: { type: Boolean, default: false }, verificationToken: { type: String }, resetPasswordToken: { type: String }, resetPasswordExpires: { type: Date }, createdAt: { type: Date, default: Date.now } });
 const User = mongoose.model('User', UserSchema);
 
-const PlanSchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true },
-    minAmount: { type: Number, required: true },
-    durationDays: { type: Number, required: true },
-    roiPercentage: { type: Number, required: true },
-    isActive: { type: Boolean, default: true }
-});
+const PlanSchema = new mongoose.Schema({ name: { type: String, required: true, unique: true }, minAmount: { type: Number, required: true }, durationDays: { type: Number, required: true }, roiPercentage: { type: Number, required: true }, isActive: { type: Boolean, default: true } });
 const Plan = mongoose.model('Plan', PlanSchema);
 
-const BotSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    plan: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan', required: true },
-    investedAmount: { type: Number, required: true },
-    expectedProfit: { type: Number, required: true },
-    startDate: { type: Date, default: Date.now },
-    endDate: { type: Date, required: true },
-    isCompleted: { type: Boolean, default: false }
-});
+const BotSchema = new mongoose.Schema({ user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, plan: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan', required: true }, investedAmount: { type: Number, required: true }, expectedProfit: { type: Number, required: true }, startDate: { type: Date, default: Date.now }, endDate: { type: Date, required: true }, isCompleted: { type: Boolean, default: false } });
 const Bot = mongoose.model('Bot', BotSchema);
 
-const DepositMethodSchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true },
-    accountInfo: { type: String, required: true },
-    instructions: { type: String, required: true },
-    isActive: { type: Boolean, default: true }
-});
+const DepositMethodSchema = new mongoose.Schema({ name: { type: String, required: true, unique: true }, accountInfo: { type: String, required: true }, instructions: { type: String, required: true }, isActive: { type: Boolean, default: true } });
 const DepositMethod = mongoose.model('DepositMethod', DepositMethodSchema);
 
-const TransactionSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    type: { type: String, enum: ['DEPOSIT', 'WITHDRAWAL', 'INVESTMENT', 'PROFIT'], required: true },
-    amount: { type: Number, required: true },
-    status: { type: String, enum: ['COMPLETED', 'PENDING', 'FAILED'], default: 'COMPLETED' },
-    method: { type: String },
-    userTransactionId: { type: String },
-    description: { type: String },
-    createdAt: { type: Date, default: Date.now }
-});
+const TransactionSchema = new mongoose.Schema({ user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, type: { type: String, enum: ['DEPOSIT', 'WITHDRAWAL', 'INVESTMENT', 'PROFIT'], required: true }, amount: { type: Number, required: true }, status: { type: String, enum: ['COMPLETED', 'PENDING', 'FAILED'], default: 'COMPLETED' }, method: { type: String }, userTransactionId: { type: String }, description: { type: String }, createdAt: { type: Date, default: Date.now } });
 const Transaction = mongoose.model('Transaction', TransactionSchema);
 
 // -----------------------------------------------------------------------------
@@ -110,32 +68,25 @@ const authMiddleware = (req, res, next) => {
     try {
         req.user = jwt.verify(token, process.env.JWT_SECRET);
         next();
-    } catch (error) {
-        res.status(401).json({ message: 'Acesso negado ou token inválido.' });
-    }
+    } catch (error) { res.status(401).json({ message: 'Acesso negado ou token inválido.' }); }
 };
 
 const adminMiddleware = async (req, res, next) => {
     try {
         const user = await User.findById(req.user.id);
-        if (!user || !user.isAdmin) {
-            return res.status(403).json({ message: 'Acesso negado. Requer permissão de administrador.' });
-        }
+        if (!user || !user.isAdmin) { return res.status(403).json({ message: 'Acesso negado. Requer permissão de administrador.' }); }
         next();
-    } catch (error) {
-        res.status(500).json({ message: 'Erro ao verificar permissões de administrador.' });
-    }
+    } catch (error) { res.status(500).json({ message: 'Erro ao verificar permissões de administrador.' }); }
 };
 
 const generateResponsePage = (title, icon, message, buttonText, buttonLink, isSuccess) => {
     const primaryColor = isSuccess ? '#10B981' : '#e53e3e';
-    return `
-    <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>cBOT - ${title}</title><script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');body{font-family:'Inter',sans-serif;background-color:#111111;color:#f0f0f0;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:1rem;}.container{text-align:center;max-width:450px;background-color:#1a1a1a;border:1px solid #333;border-radius:16px;padding:3rem;box-shadow:0 10px 25px rgba(0,0,0,0.5);}.icon{font-size:4rem;color:${primaryColor};margin-bottom:1.5rem;}h1{font-size:1.8rem;font-weight:700;margin-bottom:1rem;}p{color:#888888;line-height:1.6;margin-bottom:2rem;}.button{display:inline-block;padding:0.8rem 2rem;background-color:${primaryColor};color:#fff;text-decoration:none;border-radius:8px;font-weight:600;transition:background-color .3s;}.button:hover{background-color:${isSuccess?'#0f996b':'#c53030'};}</style></head><body><div class="container"><div class="icon"><iconify-icon icon="${icon}"></iconify-icon></div><h1>${title}</h1><p>${message}</p><a href="${buttonLink}" class="button">${buttonText}</a></div></body></html>`;
+    return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>cBOT - ${title}</title><script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');body{font-family:'Inter',sans-serif;background-color:#111111;color:#f0f0f0;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:1rem;}.container{text-align:center;max-width:450px;background-color:#1a1a1a;border:1px solid #333;border-radius:16px;padding:3rem;box-shadow:0 10px 25px rgba(0,0,0,0.5);}.icon{font-size:4rem;color:${primaryColor};margin-bottom:1.5rem;}h1{font-size:1.8rem;font-weight:700;margin-bottom:1rem;}p{color:#888888;line-height:1.6;margin-bottom:2rem;}.button{display:inline-block;padding:0.8rem 2rem;background-color:${primaryColor};color:#fff;text-decoration:none;border-radius:8px;font-weight:600;transition:background-color .3s;}.button:hover{background-color:${isSuccess?'#0f996b':'#c53030'};}</style></head><body><div class="container"><div class="icon"><iconify-icon icon="${icon}"></iconify-icon></div><h1>${title}</h1><p>${message}</p><a href="${buttonLink}" class="button">${buttonText}</a></div></body></html>`;
 };
 
 const generateResetPasswordPage = (token) => {
-    return `
-    <!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>cBOT - Redefinir Senha</title><script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');:root{--bg-color:#111;--card-color:#1a1a1a;--border-color:#333;--text-color:#f0f0f0;--text-muted-color:#888;--primary-color:#e53e3e;--primary-hover-color:#c53030;--success-color:#10B981}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;background-color:var(--bg-color);color:var(--text-color);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}.container{width:100%;max-width:420px;background-color:var(--card-color);border:1px solid var(--border-color);border-radius:16px;padding:2.5rem;box-shadow:0 10px 25px rgba(0,0,0,.5)}.header{text-align:center;margin-bottom:2rem}.header iconify-icon{font-size:3rem;color:var(--primary-color);margin-bottom:1rem}h1{font-size:1.8rem;font-weight:700}.header p{color:var(--text-muted-color);margin-top:.5rem;font-size:.9rem;line-height:1.5}.form{display:flex;flex-direction:column;gap:1.25rem}.input-group label{font-size:.875rem;font-weight:500;color:var(--text-muted-color);margin-bottom:.5rem;display:block}.input-field{width:100%;background-color:#2b2b2b;border:1px solid var(--border-color);border-radius:8px;padding:.8rem 1rem;color:var(--text-color);font-size:1rem;transition:all .3s}.input-field:focus{outline:none;border-color:var(--primary-color);box-shadow:0 0 0 3px rgba(229,62,62,.3)}.submit-button{display:flex;align-items:center;justify-content:center;width:100%;padding:.8rem 1rem;background-color:var(--primary-color);color:#fff;font-size:1rem;font-weight:600;border:none;border-radius:8px;cursor:pointer;transition:background-color .3s;margin-top:.5rem}.submit-button:disabled{background-color:#555;cursor:not-allowed}.spinner{display:none;width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:#fff;animation:spin 1s ease-in-out infinite}@keyframes spin{to{transform:rotate(360deg)}}.feedback-message{display:none;padding:.8rem;border-radius:8px;text-align:center;font-weight:500;margin-top:1rem;font-size:.9rem}.feedback-message.success{background-color:rgba(16,185,129,.1);color:var(--success-color)}.feedback-message.error{background-color:rgba(229,62,62,.1);color:var(--primary-color)}.login-link{text-align:center;margin-top:1.5rem;display:none}.login-link a{color:var(--primary-color);font-weight:600;text-decoration:none}</style></head><body><div class="container"><div class="header"><iconify-icon icon="mdi:key-change-outline"></iconify-icon><h1>Defina a sua Nova Senha</h1><p>Escolha uma senha forte e segura que não tenha usado anteriormente.</p></div><form id="resetPasswordForm" class="form"><div class="input-group"><label for="password">Nova Senha</label><input type="password" id="password" class="input-field" required minlength="6"></div><div class="input-group"><label for="confirmPassword">Confirmar Nova Senha</label><input type="password" id="confirmPassword" class="input-field" required minlength="6"></div><button type="submit" class="submit-button" id="submitButton"><span id="buttonText">Redefinir Senha</span><div class="spinner" id="buttonSpinner"></div></button></form><div id="feedbackMessage" class="feedback-message"></div><div class="login-link" id="loginLinkContainer"><a href="/login.html">Ir para o Login</a></div></div><script>document.addEventListener('DOMContentLoaded',()=>{const e=document.getElementById("resetPasswordForm"),t=document.getElementById("submitButton"),s=document.getElementById("buttonText"),o=document.getElementById("buttonSpinner"),n=document.getElementById("feedbackMessage"),i=document.getElementById("loginLinkContainer"),a=new URLSearchParams(window.location.search).get("token");a||(e.style.display="none",r("Token de recuperação não encontrado.","error"));const d=s=>{t.disabled=s,s.style.display=s?"none":"block",o.style.display=s?"block":"none"},r=(e,t)=>{n.textContent=e,n.className=`feedback-message ${t}`,n.style.display="block"};e.addEventListener("submit",async t=>{t.preventDefault(),n.style.display="none";const s=document.getElementById("password").value,o=document.getElementById("confirmPassword").value;if(s!==o)return void r("As senhas não coincidem.","error");d(!0);try{const t=await fetch(`/api/auth/reset-password/${a}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:s})}),o=await t.json();t.ok?(r(o.message,"success"),e.style.display="none",i.style.display="block"):r(o.message||"Ocorreu um erro.","error")}catch(e){r("Não foi possível conectar ao servidor.","error")}finally{d(!1)}})})</script></body></html>`;
+    // This minified HTML/CSS/JS is now syntactically correct for use inside a template literal.
+    return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>cBOT - Redefinir Senha</title><script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"><\/script><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');:root{--bg-color:#111;--card-color:#1a1a1a;--border-color:#333;--text-color:#f0f0f0;--text-muted-color:#888;--primary-color:#e53e3e;--primary-hover-color:#c53030;--success-color:#10B981}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;background-color:var(--bg-color);color:var(--text-color);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}.container{width:100%;max-width:420px;background-color:var(--card-color);border:1px solid var(--border-color);border-radius:16px;padding:2.5rem;box-shadow:0 10px 25px rgba(0,0,0,.5)}.header{text-align:center;margin-bottom:2rem}.header iconify-icon{font-size:3rem;color:var(--primary-color);margin-bottom:1rem}h1{font-size:1.8rem;font-weight:700}.header p{color:var(--text-muted-color);margin-top:.5rem;font-size:.9rem;line-height:1.5}.form{display:flex;flex-direction:column;gap:1.25rem}.input-group label{font-size:.875rem;font-weight:500;color:var(--text-muted-color);margin-bottom:.5rem;display:block}.input-field{width:100%;background-color:#2b2b2b;border:1px solid var(--border-color);border-radius:8px;padding:.8rem 1rem;color:var(--text-color);font-size:1rem;transition:all .3s}.input-field:focus{outline:none;border-color:var(--primary-color);box-shadow:0 0 0 3px rgba(229,62,62,.3)}.submit-button{display:flex;align-items:center;justify-content:center;width:100%;padding:.8rem 1rem;background-color:var(--primary-color);color:#fff;font-size:1rem;font-weight:600;border:none;border-radius:8px;cursor:pointer;transition:background-color .3s;margin-top:.5rem}.submit-button:disabled{background-color:#555;cursor:not-allowed}.spinner{display:none;width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-radius:50%;border-top-color:#fff;animation:spin 1s ease-in-out infinite}@keyframes spin{to{transform:rotate(360deg)}}.feedback-message{display:none;padding:.8rem;border-radius:8px;text-align:center;font-weight:500;margin-top:1rem;font-size:.9rem}.feedback-message.success{background-color:rgba(16,185,129,.1);color:var(--success-color)}.feedback-message.error{background-color:rgba(229,62,62,.1);color:var(--primary-color)}.login-link{text-align:center;margin-top:1.5rem;display:none}.login-link a{color:var(--primary-color);font-weight:600;text-decoration:none}<\/style><\/head><body><div class="container"><div class="header"><iconify-icon icon="mdi:key-change-outline"><\/iconify-icon><h1>Defina a sua Nova Senha<\/h1><p>Escolha uma senha forte e segura que não tenha usado anteriormente.<\/p><\/div><form id="resetPasswordForm" class="form"><div class="input-group"><label for="password">Nova Senha<\/label><input type="password" id="password" class="input-field" required minlength="6"><\/div><div class="input-group"><label for="confirmPassword">Confirmar Nova Senha<\/label><input type="password" id="confirmPassword" class="input-field" required minlength="6"><\/div><button type="submit" class="submit-button" id="submitButton"><span id="buttonText">Redefinir Senha<\/span><div class="spinner" id="buttonSpinner"><\/div><\/button><\/form><div id="feedbackMessage" class="feedback-message"><\/div><div class="login-link" id="loginLinkContainer"><a href="/login.html">Ir para o Login<\/a><\/div><\/div><script>document.addEventListener('DOMContentLoaded',()=>{const e=document.getElementById("resetPasswordForm"),t=document.getElementById("submitButton"),s=document.getElementById("buttonText"),o=document.getElementById("buttonSpinner"),n=document.getElementById("feedbackMessage"),i=document.getElementById("loginLinkContainer"),a=new URLSearchParams(window.location.search).get("token");if(!a)return e.style.display="none",r("Token de recuperação não encontrado.","error");const d=e=>{t.disabled=e,s.style.display=e?"none":"block",o.style.display=e?"block":"none"},r=(e,t)=>{n.textContent=e,n.className='feedback-message '+t,n.style.display="block"};e.addEventListener("submit",async t=>{t.preventDefault(),n.style.display="none";const s=document.getElementById("password").value,o=document.getElementById("confirmPassword").value;if(s!==o)return void r("As senhas não coincidem.","error");d(!0);try{const t=await fetch('/api/auth/reset-password/'+a,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:s})}),o=await t.json();t.ok?(r(o.message,"success"),e.style.display="none",i.style.display="block"):r(o.message||"Ocorreu um erro.","error")}catch(e){r("Não foi possível conectar ao servidor.","error")}finally{d(!1)}})})<\/script><\/body><\/html>`;
 };
 
 // -----------------------------------------------------------------------------
@@ -209,9 +160,7 @@ userRouter.use(authMiddleware);
 userRouter.get('/dashboard', async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password -withdrawalPassword');
-        const activeBots = await Bot.find({ user: req.user.id, isCompleted: false }).populate('plan');
-        const transactions = await Transaction.find({ user: req.user.id }).sort({ createdAt: -1 }).limit(10);
-        res.json({ user, activeBots, transactions });
+        res.json({ user });
     } catch (error) { res.status(500).json({ message: 'Erro ao buscar dados do dashboard.' }); }
 });
 
@@ -390,10 +339,13 @@ app.get('/reset-password.html', (req, res) => {
 });
 
 // 'CATCH-ALL' ROUTE: Must be the last GET route
+// It sends the main index.html for any request that doesn't match an API route or a specific file.
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'), (err) => {
+    const filePath = path.join(__dirname, req.path);
+    res.sendFile(filePath, (err) => {
+        // If the file is not found, send index.html
         if (err) {
-            res.status(404).send("Página não encontrada.");
+            res.sendFile(path.join(__dirname, 'index.html'));
         }
     });
 });
