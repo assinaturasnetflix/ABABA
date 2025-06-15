@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cBOT - Login</title>
+    
+    <!-- Todo o CSS está embutido abaixo -->
+    <style>
+        /* Reset básico e Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-color: #111111;
+            --card-color: #1a1a1a;
+            --border-color: #333333;
+            --text-color: #f0f0f0;
+            --text-muted-color: #888888;
+            --primary-color: #e53e3e; /* Vermelho */
+            --primary-hover-color: #c53030;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Container principal do formulário */
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Cabeçalho */
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .header p {
+            color: var(--text-muted-color);
+            margin-top: 0.5rem;
+        }
+
+        /* Formulário */
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .input-field {
+            width: 100%;
+            background-color: #2b2b2b;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .input-field::placeholder {
+            color: #555;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.3);
+        }
+
+        /* Links e opções */
+        .options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+        }
+
+        .options a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .options a:hover {
+            color: var(--primary-hover-color);
+            text-decoration: underline;
+        }
+
+        /* Botão */
+        .submit-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background-color: var(--primary-color);
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 0.5rem;
+        }
+
+        .submit-button:hover {
+            background-color: var(--primary-hover-color);
+        }
+
+        .submit-button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            display: none; /* Oculto por padrão */
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mensagem de feedback */
+        .feedback-message {
+            display: none; /* Oculto por padrão */
+            padding: 0.8rem;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            margin-top: 1.5rem;
+        }
+
+        .feedback-message.error {
+            background-color: rgba(229, 62, 62, 0.1);
+            color: var(--primary-color);
+        }
+
+        /* Link de criação de conta */
+        .signup-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-muted-color);
+            font-size: 0.875rem;
+        }
+
+        .signup-link a {
+            color: var(--primary-color);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="header">
+            <h1>cBOT</h1>
+            <p>Bem-vindo de volta! Faça login para continuar.</p>
+        </div>
+
+        <form id="loginForm" class="login-form">
+            <div class="input-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" name="email" class="input-field" placeholder="seu.email@exemplo.com" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" name="password" class="input-field" placeholder="••••••••" required>
+            </div>
+            
+            <div class="options">
+                <!-- Link atualizado -->
+                <a href="/forgot-password.html">Esqueceu a senha?</a>
+            </div>
+            
+            <button type="submit" class="submit-button" id="submitButton">
+                <span id="buttonText">Entrar</span>
+                <div class="spinner" id="buttonSpinner"></div>
+            </button>
+        </form>
+        
+        <div id="feedbackMessage" class="feedback-message"></div>
+
+        <div class="signup-link">
+            Não tem uma conta? 
+            <!-- Link atualizado -->
+            <a href="/register.html">Crie uma agora</a>
+        </div>
+    </div>
+
+    <!-- Todo o JavaScript está embutido abaixo -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.getElementById('loginForm');
+            const submitButton = document.getElementById('submitButton');
+            const buttonText = document.getElementById('buttonText');
+            const buttonSpinner = document.getElementById('buttonSpinner');
+            const feedbackMessage = document.getElementById('feedbackMessage');
+            
+            const setButtonLoading = (isLoading) => {
+                if (isLoading) {
+                    submitButton.disabled = true;
+                    buttonText.style.display = 'none';
+                    buttonSpinner.style.display = 'block';
+                } else {
+                    submitButton.disabled = false;
+                    buttonText.style.display = 'block';
+                    buttonSpinner.style.display = 'none';
+                }
+            };
+
+            const showFeedback = (message, type) => {
+                feedbackMessage.textContent = message;
+                feedbackMessage.className = `feedback-message ${type}`;
+                feedbackMessage.style.display = 'block';
+            };
+
+            loginForm.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                feedbackMessage.style.display = 'none';
+                setButtonLoading(true);
+
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const backendUrl = '/api/auth/login';
+
+                try {
+                    const response = await fetch(backendUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email, password }),
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        localStorage.setItem('cbot_token', result.token);
+                        // Redireciona imediatamente para o dashboard
+                        window.location.href = '/dashboard.html'; 
+                    } else {
+                        showFeedback(result.message || 'Credenciais inválidas. Tente novamente.', 'error');
+                    }
+
+                } catch (error) {
+                    console.error('Erro de rede ou conexão:', error);
+                    showFeedback('Não foi possível conectar ao servidor. Verifique a sua conexão.', 'error');
+                } finally {
+                    setButtonLoading(false);
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
