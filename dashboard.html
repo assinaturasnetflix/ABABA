@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cBOT - Meu Dashboard</title>
+    
+    <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        :root {
+            --bg-color: #0d0d0d; --card-color: #1a1a1a; --border-color: #333333;
+            --text-color: #f0f0f0; --text-muted-color: #888888;
+            --primary-color: #e53e3e; --primary-hover-color: #c53030;
+            --price-up-color: #10B981; --price-down-color: #EF4444;
+            --skeleton-color: #2b2b2b;
+            --warning-color: #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif; background-color: var(--bg-color);
+            color: var(--text-color); -webkit-font-smoothing: antialiased;
+            padding-bottom: 80px; /* Space for fixed footer */
+        }
+        .container {
+            width: 100%; max-width: 800px;
+            margin: 0 auto; padding: 1.5rem;
+        }
+        a { text-decoration: none; color: inherit; }
+
+        /* Header */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .welcome-text h1 { font-size: 1.5rem; font-weight: 700; }
+        .welcome-text p { font-size: 0.9rem; color: var(--text-muted-color); }
+        .header-actions { display: flex; align-items: center; gap: 0.75rem; }
+        .header-actions a, .header-actions button {
+            font-size: 2.2rem; background: none; border: none;
+            color: var(--text-muted-color); transition: color 0.3s;
+            cursor: pointer; padding: 0.25rem;
+        }
+        .header-actions a:hover, .header-actions button:hover { color: var(--primary-color); }
+
+        /* Balance Card */
+        .balance-card {
+            background: linear-gradient(45deg, var(--primary-color), #4a1a1a);
+            border-radius: 20px; padding: 2rem;
+            text-align: center; margin-bottom: 1.5rem;
+            box-shadow: 0 10px 30px rgba(229, 62, 62, 0.2);
+        }
+        .balance-card .label { font-size: 1rem; color: rgba(255, 255, 255, 0.8); margin-bottom: 0.5rem; }
+        .balance-card .amount { font-size: 2.5rem; font-weight: 800; color: #fff; }
+
+        /* Action Card */
+        .action-card {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+            gap: 1rem; background-color: var(--card-color);
+            border-radius: 16px; padding: 1.5rem;
+            margin-bottom: 2rem; border: 1px solid var(--border-color);
+        }
+        .action-item {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 0.5rem; color: var(--text-muted-color); transition: color 0.3s;
+        }
+        .action-item:hover { color: var(--primary-color); }
+        .action-item .icon {
+            font-size: 2rem; background-color: #2b2b2b;
+            border-radius: 12px; width: 50px; height: 50px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .action-item .text { font-size: 0.8rem; font-weight: 500; }
+
+        /* Generic Card for Lists */
+        .content-card {
+            background-color: var(--card-color); border-radius: 16px;
+            padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color);
+        }
+        .card-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 1rem; }
+        .list-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 0; border-bottom: 1px solid var(--border-color);
+        }
+        .list-item:last-child { border-bottom: none; }
+        .item-details { display: flex; align-items: center; gap: 1rem; }
+        .item-icon { font-size: 1.8rem; }
+        .item-info .title { font-weight: 600; }
+        .item-info .subtitle { font-size: 0.8rem; color: var(--text-muted-color); }
+        .item-value { text-align: right; }
+        .item-value .price, .item-value .amount { font-weight: 600; }
+        .item-value .change { font-size: 0.8rem; }
+
+        /* Footer Bar */
+        .footer-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background-color: var(--card-color); border-top: 1px solid var(--border-color);
+            display: flex; justify-content: space-around;
+            padding: 0.5rem 0; z-index: 100;
+        }
+        .footer-item {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 0.25rem; color: var(--text-muted-color); font-size: 0.7rem;
+            padding: 0.5rem; transition: color 0.3s;
+        }
+        .footer-item:hover { color: var(--primary-color); }
+        .footer-item iconify-icon { font-size: 1.5rem; }
+
+        /* Helpers */
+        .price-up { color: var(--price-up-color); }
+        .price-down { color: var(--price-down-color); }
+        .empty-state { text-align: center; padding: 2rem; color: var(--text-muted-color); }
+        .skeleton { background-color: var(--skeleton-color); border-radius: 6px; animation: pulse-bg 1.5s infinite; }
+        @keyframes pulse-bg { 50% { background-color: #333; } }
+        .skeleton-text { height: 1em; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="welcome-text">
+                <h1 id="welcomeMessage"><div class="skeleton skeleton-text" style="width: 200px;"></div></h1>
+                <p>O seu resumo financeiro.</p>
+            </div>
+            <div class="header-actions">
+                <a href="/profile.html" aria-label="Meu Perfil">
+                    <iconify-icon icon="mdi:account-circle-outline"></iconify-icon>
+                </a>
+                <button id="logoutButton" aria-label="Sair">
+                     <iconify-icon icon="mdi:logout-variant"></iconify-icon>
+                </button>
+            </div>
+        </header>
+
+        <!-- Balance Card -->
+        <div class="balance-card">
+            <div class="label">Saldo Disponível</div>
+            <div id="balanceValue" class="amount"><div class="skeleton skeleton-text" style="width: 250px; height: 2.5rem; margin: 0 auto;"></div></div>
+        </div>
+
+        <!-- Action Card -->
+        <div class="action-card">
+            <a href="/deposit.html" class="action-item"><div class="icon"><iconify-icon icon="mdi:arrow-down-bold-circle-outline"></iconify-icon></div><span class="text">Depositar</span></a>
+            <a href="/bots.html" class="action-item"><div class="icon"><iconify-icon icon="mdi:robot-happy-outline"></iconify-icon></div><span class="text">Bots</span></a>
+            <a href="/withdrawal.html" class="action-item"><div class="icon"><iconify-icon icon="mdi:arrow-up-bold-circle-outline"></iconify-icon></div><span class="text">Levantar</span></a>
+            <a href="/transactions.html" class="action-item"><div class="icon"><iconify-icon icon="mdi:swap-horizontal-bold"></iconify-icon></div><span class="text">Histórico</span></a>
+        </div>
+
+        <!-- Active Bots -->
+        <div class="content-card">
+            <h2 class="card-title">Bots Ativos</h2>
+            <div id="active-bots-list">
+                <div class="list-item"><div class="item-details" style="width: 100%;"><div class="item-icon skeleton" style="width: 40px; height: 40px; border-radius: 50%;"></div><div class="item-info" style="width: 100%;"><div class="skeleton skeleton-text" style="width: 40%;"></div><div class="skeleton skeleton-text" style="width: 60%; margin-top: 0.5rem;"></div></div></div></div>
+            </div>
+        </div>
+
+        <!-- Crypto Market -->
+        <div class="content-card">
+            <h2 class="card-title">Mercado</h2>
+            <div id="crypto-market-list">
+                <div class="list-item"><div class="item-details" style="width: 100%;"><div class="item-icon skeleton" style="width: 40px; height: 40px; border-radius: 50%;"></div><div class="item-info" style="width: 100%;"><div class="skeleton skeleton-text" style="width: 30%;"></div><div class="skeleton skeleton-text" style="width: 50%; margin-top: 0.5rem;"></div></div></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Bar -->
+    <footer class="footer-bar">
+        <a href="/referrals.html" class="footer-item"><iconify-icon icon="mdi:gift-outline"></iconify-icon><span>Referências</span></a>
+        <a href="/contact.html" class="footer-item"><iconify-icon icon="mdi:headset"></iconify-icon><span>Contacto</span></a>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('cbot_token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // --- DOM Elements ---
+            const welcomeMessageEl = document.getElementById('welcomeMessage');
+            const balanceValueEl = document.getElementById('balanceValue');
+            const activeBotsListEl = document.getElementById('active-bots-list');
+            const cryptoMarketListEl = document.getElementById('crypto-market-list');
+
+            const formatCurrency = (value) => new Intl.NumberFormat('pt-MZ', { style: 'currency', currency: 'MZN' }).format(value || 0);
+
+            // --- Logout ---
+            document.getElementById('logoutButton').addEventListener('click', () => {
+                localStorage.removeItem('cbot_token');
+                window.location.href = '/login.html';
+            });
+
+            // --- Load Dashboard Data ---
+            const loadDashboardData = async () => {
+                try {
+                    const response = await fetch('/api/user/dashboard', { headers: { 'Authorization': `Bearer ${token}` } });
+                    if (!response.ok) throw new Error('Falha ao carregar dados do utilizador');
+                    const { user, activeBots } = await response.json();
+
+                    welcomeMessageEl.textContent = `Olá, ${user.name.split(' ')[0]}!`;
+                    balanceValueEl.textContent = formatCurrency(user.balance);
+                    balanceValueEl.classList.remove('skeleton', 'skeleton-text');
+
+                    activeBotsListEl.innerHTML = '';
+                    if (activeBots && activeBots.length > 0) {
+                        activeBots.forEach(bot => {
+                            const endDate = new Date(bot.endDate).toLocaleDateString('pt-BR');
+                            const listItem = document.createElement('div');
+                            listItem.className = 'list-item';
+                            listItem.innerHTML = `<div class="item-details"><iconify-icon class="item-icon" icon="mdi:robot-outline" style="color: var(--primary-color)"></iconify-icon><div class="item-info"><div class="title">${bot.plan.name}</div><div class="subtitle">Termina em: ${endDate}</div></div></div><div class="item-value"><div class="amount">${formatCurrency(bot.investedAmount)}</div></div>`;
+                            activeBotsListEl.appendChild(listItem);
+                        });
+                    } else {
+                        activeBotsListEl.innerHTML = '<p class="empty-state">Nenhum bot ativo no momento.</p>';
+                    }
+                } catch (error) {
+                    console.error('Dashboard Load Error:', error);
+                }
+            };
+            
+            // --- Load Crypto Market Data (Livestream Only) ---
+            const cryptoPairs = [
+                { symbol: 'BTC', icon: 'logos:bitcoin' },
+                { symbol: 'ETH', icon: 'logos:ethereum' },
+                { symbol: 'SOL', icon: 'logos:solana' },
+                { symbol: 'DOGE', icon: 'logos:dogecoin' }
+            ];
+
+            const loadMarketData = () => {
+                cryptoMarketListEl.innerHTML = ''; // Clear existing content
+                cryptoPairs.forEach(pair => {
+                    const listItem = document.createElement('div');
+                    listItem.className = 'list-item';
+                    listItem.id = `crypto-${pair.symbol.toLowerCase()}usdt`;
+                    listItem.innerHTML = `<div class="item-details"><iconify-icon class="item-icon" icon="${pair.icon}"></iconify-icon><div class="item-info"><div class="title">${pair.symbol}/USDT</div><div class="subtitle">A aguardar dados...</div></div></div><div class="item-value"><div class="price">--.--</div><div class="change">--%</div></div>`;
+                    cryptoMarketListEl.appendChild(listItem);
+                });
+
+                const streams = cryptoPairs.map(p => `${p.symbol.toLowerCase()}usdt@ticker`).join('/');
+                const socket = new WebSocket(`wss://stream.binance.com:9443/ws/${streams}`);
+
+                socket.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.e !== '24hrTicker') return;
+                        
+                        const card = document.getElementById(`crypto-${data.s.toLowerCase()}`);
+                        if (!card) return;
+
+                        const priceEl = card.querySelector('.price');
+                        const changeEl = card.querySelector('.change');
+                        const subtitleEl = card.querySelector('.subtitle');
+
+                        const priceChangePercent = parseFloat(data.P);
+                        
+                        priceEl.textContent = parseFloat(data.c).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+                        subtitleEl.textContent = "Binance Livestream";
+                        changeEl.textContent = `${priceChangePercent.toFixed(2)}%`;
+                        
+                        const priceClass = priceChangePercent >= 0 ? 'price-up' : 'price-down';
+                        changeEl.className = `change ${priceClass}`;
+
+                    } catch (e) { console.warn("Could not parse market data:", e); }
+                };
+
+                socket.onerror = (error) => {
+                    console.error('WebSocket Error:', error);
+                    cryptoMarketListEl.innerHTML = '<p class="empty-state" style="color: var(--warning-color); font-size: 0.9rem;">A ligação em tempo real falhou. Isto é esperado no desenvolvimento local. A funcionalidade será ativada no site publicado.</p>';
+                };
+            };
+            
+            // --- Initialize Page ---
+            loadDashboardData();
+            loadMarketData();
+        });
+    </script>
+</body>
+</html>
